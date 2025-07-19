@@ -1,11 +1,11 @@
 # Tiny Tapeout project information
 project:
-  title:        ""      # Project title
-  author:       ""      # Your name
-  discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  ""      # One line description of what your project does
+  title:        "WS2812B LED strip driver"      # Project title
+  author:       "Ciro Cattuto"      # Your name
+  discord:      "ccattuto"      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
+  description:  "WS2812B LED strip driver"      # One line description of what your project does
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
-  clock_hz:     64000000  # Clock frequency in Hz (or 0 if not applicable)
+  clock_hz:     71500000  # Clock frequency in Hz (or 0 if not applicable)
 
   # How many tiles your design occupies? A single tile is about 167x108 uM.
   tiles: "1x1"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
@@ -41,7 +41,7 @@ pinout:
 
   # Outputs
   uo[0]: ""
-  uo[1]: ""
+  uo[1]: "LED strip data in"
   uo[2]: ""
   uo[3]: ""
   uo[4]: ""
