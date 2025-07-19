@@ -47,7 +47,7 @@ module tqvp_cattuto_ws2812b_driver (
             black <= 0;
         end else begin
             if (data_write) begin
-                case (address) begin
+                case (address)
                     REG_PUSH: begin
                         if (ledstrip_ready) begin
                             latch <= data_in[7];
