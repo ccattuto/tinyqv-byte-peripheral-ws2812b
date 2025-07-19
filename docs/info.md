@@ -26,7 +26,7 @@ Register MODE (`0x00`) controls the LED strip update mode. If MODE=0, a pixel is
 
 ## How to test
 
-Explain how to use your project
+Connectd a WS2812B LED strip to `uo_out[1]`. Write 255 to register R, write 0x81 to PUSH, check that a red pixel appears in the strip. 
 
 ## External hardware
 
