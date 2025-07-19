@@ -95,6 +95,7 @@ module tqvp_cattuto_ws2812b_driver (
 
     wire [23:0] ledstrip_data;
     reg ledstrip_valid;
+    wire ledstrip_reset;
     wire ledstrip_latch;
     wire ledstrip_ready;
     wire ledstrip;
