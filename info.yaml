@@ -19,6 +19,7 @@ project:
   source_files:
     - "peripheral.v"
     - "tt_wrapper.v"
+    - "ws2812b.v"
     - "spi/falling_edge_detector.sv"
     - "spi/rising_edge_detector.sv"
     - "spi/reclocking.sv"
