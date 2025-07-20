@@ -20,6 +20,7 @@ project:
     - "peripheral.v"
     - "tt_wrapper.v"
     - "ws2812b.v"
+    - "char_rom.v"
     - "spi/falling_edge_detector.sv"
     - "spi/rising_edge_detector.sv"
     - "spi/reclocking.sv"

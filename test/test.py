@@ -10,7 +10,7 @@ import random
 from tqv import TinyQV
 
 @cocotb.test()
-async def test_single_pixel(dut):
+async def test_project(dut):
     dut._log.info("Start")
 
     # Set the clock period to 15 ns (~66.7 MHz)
@@ -135,6 +135,25 @@ async def test_single_pixel(dut):
         assert bitseq == [0] * 24
     await f
   
+    delay = await wait_peripheral_ready(tqv)
+    dut._log.info(f"Peripheral ready after {delay:.2f} us")
+    assert delay > 250
+
+    while await tqv.read_reg(0) == 0:
+        await ClockCycles(dut.clk, 1000)
+ 
+    # test character generator
+    dut._log.info("Test character generator")
+
+    # request ASCI character 'A' (65)
+    dut._log.info(f"Pushing 7x5 pixel matrix for ASCII 65")
+    f = cocotb.start_soon(tqv.write_reg(4, 65 | 0x80))
+    assert led.value == 0
+    for count in range(35):
+        bitseq = await get_GRB(dut, led)
+        dut._log.info(f"Read back {len(bitseq)} bits: {bitseq}")
+    await f
+ 
     delay = await wait_peripheral_ready(tqv)
     dut._log.info(f"Peripheral ready after {delay:.2f} us")
     assert delay > 250
