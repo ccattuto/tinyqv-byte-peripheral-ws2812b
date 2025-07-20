@@ -33,16 +33,16 @@ async def test_single_pixel(dut):
 
     # Test register write and read back
     dut._log.info("Write and read back G register")
-    await tqv.write_reg(2, 255)
-    assert await tqv.read_reg(2) == 255
+    await tqv.write_reg(1, 255)
+    assert await tqv.read_reg(1) == 255
 
     dut._log.info("Write and read back R register")
-    await tqv.write_reg(3, 15)
-    assert await tqv.read_reg(3) == 15
+    await tqv.write_reg(2, 15)
+    assert await tqv.read_reg(2) == 15
 
     dut._log.info("Write and read back B register")
-    await tqv.write_reg(4, 128)
-    assert await tqv.read_reg(4) == 128
+    await tqv.write_reg(3, 128)
+    assert await tqv.read_reg(3) == 128
 
     # wait for peripheral to be ready
     dut._log.info("Wait for peripheral to be ready")
@@ -51,7 +51,7 @@ async def test_single_pixel(dut):
 
     # push pixel
     dut._log.info("Write PUSH register")
-    f = cocotb.start_soon(tqv.write_reg(1, 0x01))
+    f = cocotb.start_soon(tqv.write_reg(0, 0x01))
     assert led.value == 0
     bitseq = await get_GRB(dut, led)
     await f
@@ -62,7 +62,7 @@ async def test_single_pixel(dut):
 
     # push (0,0,0) pixel
     dut._log.info("Write PUSH register")
-    f = cocotb.start_soon(tqv.write_reg(1, 0x00))
+    f = cocotb.start_soon(tqv.write_reg(0, 0x00))
     assert led.value == 0
     bitseq = await get_GRB(dut, led)
     await f
@@ -80,12 +80,12 @@ async def test_single_pixel(dut):
         color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         strip_reset = int(random.random() > 0.5)
         dut._log.info(f"Loading color {color}, reset={strip_reset}")
-        await tqv.write_reg(2, color[0]) # G
-        await tqv.write_reg(3, color[1]) # R
-        await tqv.write_reg(4, color[2]) # B
+        await tqv.write_reg(1, color[0]) # G
+        await tqv.write_reg(2, color[1]) # R
+        await tqv.write_reg(3, color[2]) # B
 
         dut._log.info(f"Sending pixel #{count}")
-        f = cocotb.start_soon(tqv.write_reg(1, 0x01 | (strip_reset << 7)))
+        f = cocotb.start_soon(tqv.write_reg(0, 0x01 | (strip_reset << 7)))
         assert led.value == 0
         bitseq = await get_GRB(dut, led)
         await f

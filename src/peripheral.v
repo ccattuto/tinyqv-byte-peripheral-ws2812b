@@ -26,7 +26,7 @@ module tqvp_cattuto_ws2812b_driver (
     output [7:0]  data_out      // Data out from the peripheral, set this in accordance with the supplied address
 );
 
-    localparam REG_READY=4'h0, REG_PUSH=4'h1, REG_G=4'h2, REG_R=4'h3, REG_B=4'h4;
+    localparam REG_CTRL=4'h0, REG_G=4'h1, REG_R=4'h2, REG_B=4'h3;
 
     reg valid;
     reg latch;
@@ -48,7 +48,7 @@ module tqvp_cattuto_ws2812b_driver (
         end else begin
             if (data_write) begin
                 case (address)
-                    REG_PUSH: begin
+                    REG_CTRL: begin
                         if (ledstrip_ready) begin
                             latch <= data_in[7];
                             valid <= 1;
@@ -85,7 +85,7 @@ module tqvp_cattuto_ws2812b_driver (
     assign uo_out[1] = ledstrip;
 
     // read from peripheral
-    assign data_out = (address == REG_READY) ? (8'h0 | ledstrip_ready) :
+    assign data_out = (address == REG_CTRL) ? (8'h0 | ledstrip_ready) :
                       (address == REG_G) ? ((color >> 16) & 8'hFF) :
                       (address == REG_R) ? ((color >> 8) & 8'hFF) :
                       (address == REG_B) ? (color & 8'hFF) :
