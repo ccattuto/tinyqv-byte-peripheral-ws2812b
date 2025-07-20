@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# Run this to generate the character ROM data:
+# ./char_convert.py > src/font.bin
+# cp src/font.bin test/font.bin
+
 # font from https://github.com/geekammo/MicroView-Arduino-Library/blob/master/font5x7.h
 char_list = [
     0x00, 0x00, 0x00, 0x00, 0x00,

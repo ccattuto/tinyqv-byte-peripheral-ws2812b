@@ -9,163 +9,226 @@ import random
 
 from tqv import TinyQV
 
+# Test sending single pixels
 @cocotb.test()
-async def test_project(dut):
+async def test_single_pixel(dut):
     dut._log.info("Start")
 
     # Set the clock period to 15 ns (~66.7 MHz)
     clock = Clock(dut.clk, 15, units="ns")
     cocotb.start_soon(clock.start())
-
+   
     led = dut.uo_out[1]
 
-    # Interact with your design's registers through this TinyQV class.
-    # This will allow the same test to be run when your design is integrated
-    # with TinyQV - the implementation of this class will be replaces with a
-    # different version that uses Risc-V instructions instead of the SPI 
-    # interface to read and write the registers.
     tqv = TinyQV(dut)
-
-    # Reset, always start the test by resetting TinyQV
     await tqv.reset()
 
-    dut._log.info("Test pushing a single pixel")
+    dut._log.info("PUSH 1 PIXEL WITH COLOR (G=255, R=15, B=128)")
 
-    # Test register write and read back
-    dut._log.info("Write and read back G register")
+    # Test writing/reading color registers
+    dut._log.info("Writing to register G, then reading it back")
     await tqv.write_reg(1, 255)
     assert await tqv.read_reg(1) == 255
 
-    dut._log.info("Write and read back R register")
+    dut._log.info("Writing to register R, then reading it back")
     await tqv.write_reg(2, 15)
     assert await tqv.read_reg(2) == 15
 
-    dut._log.info("Write and read back B register")
+    dut._log.info("Writing to register B, then reading it back")
     await tqv.write_reg(3, 128)
     assert await tqv.read_reg(3) == 128
 
     # wait for peripheral to be ready
-    dut._log.info("Wait for peripheral to be ready")
-    while await tqv.read_reg(0) == 0:
-        await ClockCycles(dut.clk, 1000)
+    dut._log.info("Waiting for peripheral to be ready")
+    await wait_peripheral_ready(tqv)
 
-    # push pixel
-    dut._log.info("Write PUSH register")
-    f = cocotb.start_soon(tqv.write_reg(0, 0x01))
+    # push 1 pixel with the color set above
+    dut._log.info("Writing 0x01 to PUSH register")
+    f = cocotb.start_soon(tqv.write_reg(0, 0x01))  # we need to use a coroutine
     assert led.value == 0
+    # parse the the LED strip signal
     bitseq = await get_GRB(dut, led)
-    await f
-    dut._log.info(f"Read back {len(bitseq)} bits: {bitseq}")
-    assert bitseq == [1, 1, 1, 1, 1, 1, 1, 1,  # G: 255
-                      0, 0, 0, 0, 1, 1, 1, 1,  # R: 15
-                      1, 0, 0, 0, 0, 0, 0, 0]  # B: 128
+    await f  # wait for the coroutine to finish
 
-    while await tqv.read_reg(0) == 0:
-        await ClockCycles(dut.clk, 1000)
+    dut._log.info(f"Read back {len(bitseq)} bits: {bitseq}")
+    assert bitseq == [  1, 1, 1, 1, 1, 1, 1, 1,  # G: 255
+                        0, 0, 0, 0, 1, 1, 1, 1,  # R: 15
+                        1, 0, 0, 0, 0, 0, 0, 0 ]  # B: 128
+
+
+    dut._log.info("PUSH 1 BLACK PIXEL")
+
+    # wait for peripheral to be ready
+    dut._log.info("Waiting for peripheral to be ready")
+    await wait_peripheral_ready(tqv)
 
     # push (0,0,0) pixel
-    dut._log.info("Write PUSH register")
+    dut._log.info("Writing 0x00 to PUSH register")
     f = cocotb.start_soon(tqv.write_reg(0, 0x00))
     assert led.value == 0
     bitseq = await get_GRB(dut, led)
     await f
+
     dut._log.info(f"Read back {len(bitseq)} bits: {bitseq}")
     assert bitseq == [0] * 24
 
-    # send a sequence of pixels with random colors + strip refresh after each pixel
-    dut._log.info("Sending random color pixels + strip refresh")
+
+# Test sending a sequence of pixels with random colors and random strip reset flag
+@cocotb.test()
+async def test_multiple_pixels(dut):
+    NUM_RANDOM_PIXELS = 16
+    NUM_PIXELS = 11
+    NUM_BLACK_PIXELS = 7
+    PROB_RESET = 0.5  # Probability of strip reset for each pixel
+
+    dut._log.info("Start")
     random.seed(42)
 
-    while await tqv.read_reg(0) == 0:
-        await ClockCycles(dut.clk, 1000)
+    # Set the clock period to 15 ns (~66.7 MHz)
+    clock = Clock(dut.clk, 15, units="ns")
+    cocotb.start_soon(clock.start())
+   
+    led = dut.uo_out[1]
 
-    for count in range(16):
+    tqv = TinyQV(dut)
+    await tqv.reset()
+
+    dut._log.info("PUSH MULTIPLE PIXELS WITH RANDOMIZED COLORS AND RANDOM STRIP RESET FLAG")
+
+    await wait_peripheral_ready(tqv)
+
+    for count in range(NUM_RANDOM_PIXELS):
         color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-        strip_reset = int(random.random() > 0.5)
+        strip_reset = int(random.random() > PROB_RESET)
+
         dut._log.info(f"Loading color {color}, reset={strip_reset}")
-        await tqv.write_reg(1, color[0]) # G
-        await tqv.write_reg(2, color[1]) # R
-        await tqv.write_reg(3, color[2]) # B
+        await tqv.write_reg(1, color[0])  # G
+        await tqv.write_reg(2, color[1])  # R
+        await tqv.write_reg(3, color[2])  # B
 
         dut._log.info(f"Sending pixel #{count}")
         f = cocotb.start_soon(tqv.write_reg(0, 0x01 | (strip_reset << 7)))
         assert led.value == 0
         bitseq = await get_GRB(dut, led)
         await f
+
+        # Check that the read back color matches the one we set
         dut._log.info(f"Read back {len(bitseq)} bits: {bitseq}")
         assert bitseq == list(map(int, f'{color[0]:08b}')) + list(map(int, f'{color[1]:08b}')) + list(map(int, f'{color[2]:08b}'))
 
-        delay = await wait_peripheral_ready(tqv)
+        # Check that the strip reset flag results in the expected delay
+        # (conservatively, over 300 us for strip reset and under 10 us for no reset)
+        delay = await time_peripheral_ready(tqv)
         dut._log.info(f"Peripheral ready after {delay:.2f} us")
-        assert (strip_reset and delay > 250) or (not strip_reset and delay < 25)
+        assert (strip_reset and delay > 300) or (not strip_reset and delay < 10)
 
     # send multiple pixels with final strip reset
-    while await tqv.read_reg(0) == 0:
-        await ClockCycles(dut.clk, 1000)
+    dut._log.info("PUSH MULTIPLE PIXELS AND THEN RESET STRIP")
 
-    await tqv.write_reg(1, 255)
-    await tqv.write_reg(2, 15)
-    await tqv.write_reg(3, 128)
+    await wait_peripheral_ready(tqv)
 
-    dut._log.info(f"Sending 11 pixels with final strip reset")
-    f = cocotb.start_soon(tqv.write_reg(0, 0x81 | (10 << 1)))
+    await tqv.write_reg(1, 255)  # G
+    await tqv.write_reg(2, 15)   # R
+    await tqv.write_reg(3, 128)  # B
+
+    dut._log.info(f"Sending {NUM_PIXELS} pixels with strip reset")
+    f = cocotb.start_soon(tqv.write_reg(0, 0x81 | ((NUM_PIXELS-1) << 1)))
     assert led.value == 0
-    for count in range(11):
+    for count in range(NUM_PIXELS):
         bitseq = await get_GRB(dut, led)
         dut._log.info(f"Read back {len(bitseq)} bits: {bitseq}")
-        assert bitseq == [1, 1, 1, 1, 1, 1, 1, 1,  # G: 255
-                        0, 0, 0, 0, 1, 1, 1, 1,  # R: 15
-                        1, 0, 0, 0, 0, 0, 0, 0]  # B: 128
+        assert bitseq == [  1, 1, 1, 1, 1, 1, 1, 1,  # G: 255
+                            0, 0, 0, 0, 1, 1, 1, 1,  # R: 15
+                            1, 0, 0, 0, 0, 0, 0, 0 ]  # B: 128
     await f
 
-    delay = await wait_peripheral_ready(tqv)
-    dut._log.info(f"Peripheral ready after {delay:.2f} us")
-    assert delay > 250
+    delay = await time_peripheral_ready(tqv)
+    dut._log.info(f"Peripheral ready after {delay:0.2f} us")
+    assert delay > 300
 
-    while await tqv.read_reg(0) == 0:
-        await ClockCycles(dut.clk, 1000)
-    
     # send multiple black pixels with final strip reset
-    dut._log.info(f"Sending 7 black pixels with final strip reset")
-    f = cocotb.start_soon(tqv.write_reg(0, 0x80 | (6 << 1)))
+    dut._log.info(f"PUSH {NUM_BLACK_PIXELS} BLACK PIXELS AND THEN RESET STRIP")
+
+    await wait_peripheral_ready(tqv)
+   
+    # send multiple black pixels with final strip reset
+    dut._log.info(f"Sending {NUM_BLACK_PIXELS} black pixels with final strip reset")
+    f = cocotb.start_soon(tqv.write_reg(0, 0x80 | ((NUM_BLACK_PIXELS-1) << 1)))
     assert led.value == 0
-    for count in range(7):
+    for count in range(NUM_BLACK_PIXELS):
         bitseq = await get_GRB(dut, led)
         dut._log.info(f"Read back {len(bitseq)} bits: {bitseq}")
         assert bitseq == [0] * 24
     await f
   
-    delay = await wait_peripheral_ready(tqv)
-    dut._log.info(f"Peripheral ready after {delay:.2f} us")
-    assert delay > 250
+    delay = await time_peripheral_ready(tqv)
+    dut._log.info(f"Peripheral ready after {delay:0.2f} us")
+    assert delay > 300
 
-    while await tqv.read_reg(0) == 0:
-        await ClockCycles(dut.clk, 1000)
- 
-    # test character generator
-    dut._log.info("Test character generator")
 
-    # request ASCI character 'A' (65)
-    dut._log.info(f"Pushing 7x5 pixel matrix for ASCII 65")
+# Test character generator
+@cocotb.test()
+async def test_character_generator(dut):
+    dut._log.info("Start")
+
+    # Set the clock period to 15 ns (~66.7 MHz)
+    clock = Clock(dut.clk, 15, units="ns")
+    cocotb.start_soon(clock.start())
+   
+    led = dut.uo_out[1]
+
+    tqv = TinyQV(dut)
+    await tqv.reset()
+
+    dut._log.info("PUSH A PRINTABLE ASCII CHARACTER")
+
+    await wait_peripheral_ready(tqv)
+
+    await tqv.write_reg(1, 0)   # G
+    await tqv.write_reg(2, 255) # R
+    await tqv.write_reg(3, 0)   # B
+
+    # send ASCI character 'A' (65)
+    dut._log.info(f"Push 7x5 pixel matrix for ASCII 65, then reset strip")
     f = cocotb.start_soon(tqv.write_reg(4, 65 | 0x80))
     assert led.value == 0
     c = await get_char(dut, led)
     await f
-    assert c.bitmap == "00100010101000110001111111000110001"
+    assert c.bitmap == "00100010101000110001111111000110001"  # from character ROM
  
-    delay = await wait_peripheral_ready(tqv)
-    dut._log.info(f"Peripheral ready after {delay:.2f} us")
-    assert delay > 250
+    delay = await time_peripheral_ready(tqv)
+    dut._log.info(f"Peripheral ready after {delay:0.2f} us")
+    assert delay > 300
+
+    dut._log.info("PUSH A NON-PRINTABLE ASCII CHARACTER")
+
+    await wait_peripheral_ready(tqv)
+
+    # request ASCI character 'A' (65)
+    dut._log.info(f"Push 7x5 pixel matrix for ASCII 10, then reset strip")
+    f = cocotb.start_soon(tqv.write_reg(4, 10 | 0x80))
+    assert led.value == 0
+    c = await get_char(dut, led)
+    await f
+    assert c.bitmap == "11111111111111111111111111111111111"  # filled matrxi for non-printable characters
+ 
+    delay = await time_peripheral_ready(tqv)
+    dut._log.info(f"Peripheral ready after {delay:0.2f} us")
+    assert delay > 300
 
 
 async def wait_peripheral_ready(tqv):
+  while await tqv.read_reg(0) == 0:
+        await ClockCycles(tqv.dut.clk, 1000)
+
+async def time_peripheral_ready(tqv):
     t1 = get_sim_time('ns')
     while await tqv.read_reg(0) == 0:
         await Timer(1, units="us")
     t2 = get_sim_time('ns')
     return (t2 - t1) / 1000.0
 
-# read 24 color bits (G / R / B)
+# read 24 color bits (G / R / B) parsing WA2812B signal
 async def get_GRB(dut, led):
     bitseq = []
 
@@ -194,7 +257,7 @@ class Char():
         self.bitmap = bitmap
         self.color = color
 
-# read 5x7 character
+# read 5x7 character matrix
 async def get_char(dut, led):
     cseq = []
     color_set = set()
@@ -207,8 +270,8 @@ async def get_char(dut, led):
             cseq.append(0)
         dut._log.info(f"{count}: {bitseq}")
 
-    # same color for all LEDS in a given character, and a valid color
-    assert len(color_set) == 1
+    # same color for all non-black pixels in a given character
+    assert len(color_set) <= 1
 
     # print character
     print()
