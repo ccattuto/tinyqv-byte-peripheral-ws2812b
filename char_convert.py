@@ -273,4 +273,4 @@ for i in range(32, 127):
     bitseq = hex_to_binary_row_major(char_list[i*5 : (i+1)*5])
     print ("".join(['%0d' % digit for digit in bitseq]))
 
-print ("00000000000000000000000000000000000")
+print ("11111111111111111111111111111111111")

@@ -37,9 +37,9 @@ module tqvp_cattuto_ws2812b_driver (
     reg [23:0] color;
     reg [5:0] counter; 
 
-    wire [4:0] char_pixel_index;
-    assign char_pixel_index = counter[4:0] - 1;
-    assign ledstrip_data = ((~use_rom & ~black) | (use_rom & char_data[char_pixel_index])) ? color : 24'h0;
+    wire char_pixel;
+    assign char_pixel = char_data[counter - 1];
+    assign ledstrip_data = ((~use_rom & ~black) | (use_rom & char_pixel)) ? color : 24'h0;
 
     assign ledstrip_reset = ~rst_n;
     assign ledstrip_valid = valid;
