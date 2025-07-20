@@ -11,6 +11,8 @@ You can also include images in this folder and reference them in the markdown. E
 
 WS2812B LED strip driver for TinyQV. The input signal to the LED strip is on `uo_out[1]`. To push pixels to the strip, load the color into registers G/R/B and then write to register CTRL. It is possible to push multiple pixels of the same color, and to push black pixels (0,0,0) without having to change the color registers. It is possible to control whether a LED strip reset (`uo_out[1]` held low for over 300us) is sent after the pixel(s) pushed to the strip.
 
+The driver is based on a WS2812B Verilog module that has been tested in FPGA and in silicon (see [this TinyTapeout project](https://github.com/ccattuto/tt07-serial-charmatrix/)).
+
 The driver is generic, but also supports the specific case of one or more [Pixie Chroma](https://connornishijima.github.io/Pixie_Chroma/) chainable devices, each featuring two 5x7 LED matrices based on WS2812B LEDs. In this case, it is possible to directly push ASCII characters to the LED matrix by using register CHAR (0x04). 5x7 matrix representations for printable ASCII characters are supported using the font from [Arduino Microview Library](https://github.com/geekammo/MicroView-Arduino-Library/blob/master/font5x7.h) encoded in a character ROM. Non-printable ASCII characters are shown as an empty rectangle.
 
 ## Register map
