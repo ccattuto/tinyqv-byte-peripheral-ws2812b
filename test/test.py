@@ -30,26 +30,36 @@ async def test_project(dut):
 
     dut._log.info("Test project behavior")
 
-    #while await tqv.read_reg(0) == 0:
-    #    await ClockCycles(dut.clk, 1)
+    #await check_led_reset(dut, led)
 
     # Test register write and read back
+    dut._log.info("Write and read back G register")
     await tqv.write_reg(2, 255)
     assert await tqv.read_reg(2) == 255
 
+    dut._log.info("Write and read back R register")
     await tqv.write_reg(3, 15)
     assert await tqv.read_reg(3) == 15
 
+    dut._log.info("Write and read back B register")
     await tqv.write_reg(4, 128)
     assert await tqv.read_reg(4) == 128
 
-    await tqv.write_reg(1, 0x81)
+    # wait for peripheral to be ready
+    dut._log.info("Wait for peripheral to be ready")
+    while await tqv.read_reg(0) == 0:
+        await ClockCycles(dut.clk, 1000)
+
+    dut._log.info("Write PUSH register")
+    f = cocotb.start_soon(tqv.write_reg(1, 0x81))
+
+    assert led.value == 0
 
     bitseq = await get_GRB(dut, led)
     dut._log.info(f"Read back {len(bitseq)} bits: {bitseq}")
 
     await check_led_reset(dut, led)
-
+    await f
 
 # read 24 color bits (G / R / B)
 async def get_GRB(dut, led):

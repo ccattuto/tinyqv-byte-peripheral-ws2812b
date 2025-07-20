@@ -1,5 +1,5 @@
 module ws2812b (
-    input wire clk,               // 71.5 MHz input clock
+    input wire clk,               // 64 MHz input clock
     input wire reset,
     input wire [23:0] data_in,    // color data
     input wire valid,
@@ -17,7 +17,7 @@ module ws2812b (
   localparam RES_DELAY = 300e-6; // reset duration (300us)
 
   // Calculate clock cycles needed based on input clock frequency
-  parameter CLOCK_FREQ = 71.5e6; // 71.5 MHz
+  parameter CLOCK_FREQ = 64e6; // 64 MHz
 
   // Calculate clock cycles for each timing parameter
   localparam [15:0] CYCLES_PERIOD = $floor(CLOCK_FREQ * PERIOD);
@@ -75,7 +75,7 @@ module ws2812b (
           if (time_counter < CYCLES_PERIOD - 1) begin
             // Continue sending current bit
             time_counter <= time_counter + 1;
-            if (time_counter == (data[bitpos] ? CYCLES_T1H - 1 : CYCLES_T0H - 1))
+            if (time_counter == (data[bitpos] ? (CYCLES_T1H - 1) : (CYCLES_T0H - 1)))
                 led <= 0;
           end else if (bitpos > 0) begin
             // Move to next bit
