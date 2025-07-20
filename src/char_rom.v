@@ -14,6 +14,6 @@ initial begin
     $readmemb("font.bin", mem);  // load char bitmaps from file
 end
 
-assign data = (address >= ADDR_MIN) ? mem[address-ADDR_MIN] : '0;
+assign data = |address[ADDR_WIDTH:5] ? mem[address-ADDR_MIN] : '0;
 
 endmodule
