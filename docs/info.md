@@ -15,8 +15,7 @@ WS2812B LED strip driver for TinyQV. The input signal to the LED strip is on `uo
 
 | Address | Name  | Access | Description                                                         |
 |---------|-------|--------|---------------------------------------------------------------------|
-| 0x00    | CTRL  | W      | Push pixel to strip: pushes loaded color if bit 0 = 1,              |
-|         |       |        | pushes (0,0,0) if bit 0 = 0; bit 7 = send reset after push          |
+| 0x00    | CTRL  | W      | Push pixel to strip. Pushes loaded color if bit 0 = 1, pushes (0,0,0) if bit 0 = 0. Setting bit 7 = 1 sends reset after pushing the pixel. Write is ignored if the peripheral is not ready. |
 |         |       | R      | Status: bit 0 = peripheral ready                                    |
 | 0x01    | G     | R/W    | Green color component                                               |
 | 0x02    | R     | R/W    | Red color component                                                 |
@@ -24,7 +23,7 @@ WS2812B LED strip driver for TinyQV. The input signal to the LED strip is on `uo
 
 ## How to test
 
-Connectd a WS2812B LED strip to `uo_out[1]`. Write 255 to register R, write 0x81 to PUSH, check that a red pixel is displayed by the strip. 
+Connectd a WS2812B LED strip to `uo_out[1]`. Write 255 to register R (0x02), write 0x81 to CTRL (0x00), check that a red pixel is displayed by the strip. 
 
 ## External hardware
 
