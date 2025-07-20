@@ -27,6 +27,7 @@ module tqvp_cattuto_ws2812b_driver (
 );
 
     localparam REG_CTRL=4'h0, REG_G=4'h1, REG_R=4'h2, REG_B=4'h3, REG_CHAR=4'h4;
+    localparam CHAR_LEDS = 5 * 7; // 5x7 char matrix
 
     reg valid;
     reg will_latch, latch;
@@ -36,7 +37,7 @@ module tqvp_cattuto_ws2812b_driver (
     reg [23:0] color;
     reg [5:0] counter; 
 
-    assign ledstrip_data = ((~use_rom & black) | (use_rom & char_data[counter])) ? 24'h0 : color;
+    assign ledstrip_data = ((~use_rom & ~black) | (use_rom & char_data[counter - 1])) ? color : 24'h0;
     assign ledstrip_reset = ~rst_n;
     assign ledstrip_valid = valid;
     assign ledstrip_latch = latch;
@@ -52,6 +53,7 @@ module tqvp_cattuto_ws2812b_driver (
             color <= 0;
             black <= 0;
             use_rom <= 0;
+            char_index <= 0;
         end else begin
             if (data_write) begin
                 case (address)
@@ -80,7 +82,7 @@ module tqvp_cattuto_ws2812b_driver (
                     REG_CHAR: begin
                         if (ready & ledstrip_ready) begin
                             will_latch <= data_in[7];
-                            counter <= 35;
+                            counter <= CHAR_LEDS;
                             char_index <= data_in[6:0];
                             use_rom <= 1;
                             ready <= 0;
@@ -94,9 +96,11 @@ module tqvp_cattuto_ws2812b_driver (
                 if (!ledstrip_ready) begin
                     valid <= 0;
                     latch <= 0;
+                    if (valid) begin
+                        counter <= counter - 1;
+                    end
                 end else begin
                     if (!valid && (counter > 0)) begin
-                        counter <= counter - 1;
                         valid <= 1;
                         latch <= ((counter == 1) & will_latch) ? 1 : 0;
                     end else begin
@@ -143,7 +147,7 @@ module tqvp_cattuto_ws2812b_driver (
     reg [6:0] char_index;
     wire [34:0] char_data;
 
-    char_rom #(.DATA_WIDTH(35), .ADDR_WIDTH(8)) char_rom_inst (
+    char_rom #(.DATA_WIDTH(CHAR_LEDS), .ADDR_WIDTH(7)) char_rom_inst (
         .address(char_index),
         .data(char_data) 
     );

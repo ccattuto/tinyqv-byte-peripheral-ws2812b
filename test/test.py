@@ -149,10 +149,9 @@ async def test_project(dut):
     dut._log.info(f"Pushing 7x5 pixel matrix for ASCII 65")
     f = cocotb.start_soon(tqv.write_reg(4, 65 | 0x80))
     assert led.value == 0
-    for count in range(35):
-        bitseq = await get_GRB(dut, led)
-        dut._log.info(f"Read back {len(bitseq)} bits: {bitseq}")
+    c = await get_char(dut, led)
     await f
+    assert c.bitmap == "00100010101000110001111111000110001"
  
     delay = await wait_peripheral_ready(tqv)
     dut._log.info(f"Peripheral ready after {delay:.2f} us")
@@ -188,3 +187,37 @@ async def get_GRB(dut, led):
         bitseq.append( 1 if (pulse_ns > 625) else 0 )
 
     return bitseq
+
+# class to hold character's bitmap & color
+class Char():
+    def __init__(self, bitmap, color):
+        self.bitmap = bitmap
+        self.color = color
+
+# read 5x7 character
+async def get_char(dut, led):
+    cseq = []
+    color_set = set()
+    for count in range(35):
+        bitseq = await get_GRB(dut, led)
+        if sum(bitseq):
+            cseq.append(1)
+            color_set.add("".join([str(x) for x in bitseq]))
+        else:
+            cseq.append(0)
+        dut._log.info(f"{count}: {bitseq}")
+
+    # same color for all LEDS in a given character, and a valid color
+    assert len(color_set) == 1
+
+    # print character
+    print()
+    for i in range(7):
+        linestring = "".join(["O" if x==1 else "." for x in cseq[i*5:(i+1)*5]])
+        dut._log.info(linestring)
+    print()
+
+    bitmap = "".join([str(x) for x in cseq])
+    color = list(color_set)[0]
+
+    return Char(bitmap, color)

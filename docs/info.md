@@ -11,6 +11,8 @@ You can also include images in this folder and reference them in the markdown. E
 
 WS2812B LED strip driver for TinyQV. The input signal to the LED strip is on `uo_out[1]`.
 
+The driver is generic, but also supports the specific case of one or more [Pixie Chroma](https://connornishijima.github.io/Pixie_Chroma/) chainable devices, each featuring two 5x7 LED matrices based on WS2812B LEDs. In this case, it is possible to directly push ASCII characters to the LED matrix by using register CHAR (0x04). 5x7 matrix representations for printable ASCII characters are supported using the font from [Arduino Microview Library](https://github.com/geekammo/MicroView-Arduino-Library/blob/master/font5x7.h) encoded in a character ROM. Non-printable ASCII characters are shown as an empty rectangle.
+
 ## Register map
 
 | Address | Name  | Access | Description                                                         |
@@ -20,6 +22,7 @@ WS2812B LED strip driver for TinyQV. The input signal to the LED strip is on `uo
 | 0x01    | G     | R/W    | Green color component                                               |
 | 0x02    | R     | R/W    | Red color component                                                 |
 | 0x03    | B     | R/W    | Blue color component                                                |
+| 0x04    | CHAR  | W      | Push a printable ASCII character to the strip. It assumes that the strip is a chain of 5x7 LED matrices. Bits 6:0 contain the ASCII code of the character (0-127). Bit 7 = 1 resets the strip after pushing the character's pixels. |
 
 ## How to test
 
