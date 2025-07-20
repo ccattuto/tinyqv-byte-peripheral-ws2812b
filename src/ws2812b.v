@@ -14,7 +14,7 @@ module ws2812b (
   localparam T0L = 850e-9;       // width of '0' low pulse (850ns)
   localparam T1L = 450e-9;       // width of '1' low pulse (450ns)
   localparam PERIOD = 1250e-9;   // total period of one bit (1250ns)
-  localparam RES_DELAY = 300e-6; // reset duration (300us)
+  localparam RES_DELAY = 325e-6; // reset duration (325us)
 
   // Calculate clock cycles needed based on input clock frequency
   parameter CLOCK_FREQ = 64e6; // 64 MHz
