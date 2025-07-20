@@ -3,17 +3,18 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, Edge, with_timeout
+from cocotb.triggers import ClockCycles, Timer, Edge
 from cocotb.utils import get_sim_time
+import random
 
 from tqv import TinyQV
 
 @cocotb.test()
-async def test_project(dut):
+async def test_single_pixel(dut):
     dut._log.info("Start")
 
-    # Set the clock period to 14 ns (~71.5 MHz)
-    clock = Clock(dut.clk, 14, units="ns")
+    # Set the clock period to 15 ns (~66.7 MHz)
+    clock = Clock(dut.clk, 15, units="ns")
     cocotb.start_soon(clock.start())
 
     led = dut.uo_out[1]
@@ -28,9 +29,7 @@ async def test_project(dut):
     # Reset, always start the test by resetting TinyQV
     await tqv.reset()
 
-    dut._log.info("Test project behavior")
-
-    #await check_led_reset(dut, led)
+    dut._log.info("Test pushing a single pixel")
 
     # Test register write and read back
     dut._log.info("Write and read back G register")
@@ -50,16 +49,60 @@ async def test_project(dut):
     while await tqv.read_reg(0) == 0:
         await ClockCycles(dut.clk, 1000)
 
+    # push pixel
     dut._log.info("Write PUSH register")
-    f = cocotb.start_soon(tqv.write_reg(1, 0x81))
-
+    f = cocotb.start_soon(tqv.write_reg(1, 0x01))
     assert led.value == 0
-
     bitseq = await get_GRB(dut, led)
-    dut._log.info(f"Read back {len(bitseq)} bits: {bitseq}")
-
-    await check_led_reset(dut, led)
     await f
+    dut._log.info(f"Read back {len(bitseq)} bits: {bitseq}")
+    assert bitseq == [1, 1, 1, 1, 1, 1, 1, 1,  # G: 255
+                      0, 0, 0, 0, 1, 1, 1, 1,  # R: 15
+                      1, 0, 0, 0, 0, 0, 0, 0]  # B: 128
+
+    # push (0,0,0) pixel
+    dut._log.info("Write PUSH register")
+    f = cocotb.start_soon(tqv.write_reg(1, 0x00))
+    assert led.value == 0
+    bitseq = await get_GRB(dut, led)
+    await f
+    dut._log.info(f"Read back {len(bitseq)} bits: {bitseq}")
+    assert bitseq == [0] * 24
+
+    # send a sequence of pixels with random colors + strip refresh after each pixel
+    dut._log.info("Sending random color pixels + strip refresh")
+    random.seed(42)
+
+    while await tqv.read_reg(0) == 0:
+        await ClockCycles(dut.clk, 1000)
+
+    for count in range(16):
+        color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        strip_reset = int(random.random() > 0.5)
+        dut._log.info(f"Loading color {color}, reset={strip_reset}")
+        await tqv.write_reg(2, color[0]) # G
+        await tqv.write_reg(3, color[1]) # R
+        await tqv.write_reg(4, color[2]) # B
+
+        dut._log.info(f"Sending pixel #{count}")
+        f = cocotb.start_soon(tqv.write_reg(1, 0x01 | (strip_reset << 7)))
+        assert led.value == 0
+        bitseq = await get_GRB(dut, led)
+        await f
+        dut._log.info(f"Read back {len(bitseq)} bits: {bitseq}")
+        assert bitseq == list(map(int, f'{color[0]:08b}')) + list(map(int, f'{color[1]:08b}')) + list(map(int, f'{color[2]:08b}'))
+
+        delay = await wait_peripheral_ready(tqv)
+        dut._log.info(f"Peripheral ready after {delay:.2f} us")
+        assert (strip_reset and delay > 250) or (not strip_reset and delay < 25)
+
+
+async def wait_peripheral_ready(tqv):
+    t1 = get_sim_time('ns')
+    while await tqv.read_reg(0) == 0:
+        await Timer(1, units="us")
+    t2 = get_sim_time('ns')
+    return (t2 - t1) / 1000.0
 
 # read 24 color bits (G / R / B)
 async def get_GRB(dut, led):
@@ -83,25 +126,3 @@ async def get_GRB(dut, led):
         bitseq.append( 1 if (pulse_ns > 625) else 0 )
 
     return bitseq
-
-async def check_led_reset(dut, led):
-        did_timeout = False
-        assert led.value == 0
-        try:
-            await with_timeout(Edge(dut.uo_out), 50, 'us')
-        except cocotb.result.SimTimeoutError:
-            did_timeout = True
-        
-        assert did_timeout
-        assert led.value == 0
-
-async def wait_led_reset(dut, led):
-        low_time = 0
-        while low_time < 50:
-            try:
-                await with_timeout(Edge(dut.uo_out), 1, 'us')
-                if led.value == 1:
-                    low_time = 0
-            except cocotb.result.SimTimeoutError:
-                if led.value == 0:
-                    low_time += 1
