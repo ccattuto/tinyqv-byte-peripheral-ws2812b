@@ -8,12 +8,12 @@ module char_rom #(
     output wire [DATA_WIDTH-1:0] data
 );
 
-reg [DATA_WIDTH-1:0] mem [0:ADDR_MAX-ADDR_MIN+1];
+reg [DATA_WIDTH-1:0] mem [0:ADDR_MAX-ADDR_MIN];
 
 initial begin
     $readmemb("font.bin", mem);  // load char bitmaps from file
 end
 
-assign data = (address >= ADDR_MIN && address <= ADDR_MAX) ? mem[address-ADDR_MIN] : mem[ADDR_MAX-ADDR_MIN+1];
+assign data = (address >= ADDR_MIN && address <= ADDR_MAX) ? mem[address-ADDR_MIN] : '1;
 
 endmodule
