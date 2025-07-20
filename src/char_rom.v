@@ -8,7 +8,7 @@ module char_rom #(
     output wire [DATA_WIDTH-1:0] data
 );
 
-reg [DATA_WIDTH-1:0] mem [0:ADDR_MAX-ADDR_MIN+1];
+reg [DATA_WIDTH-1:0] mem [0:ADDR_MAX-ADDR_MIN];
 
 initial begin
     $readmemb("font.bin", mem);  // load char bitmaps from file
