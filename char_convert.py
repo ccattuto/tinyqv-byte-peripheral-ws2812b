@@ -274,3 +274,4 @@ for i in range(32, 127):
     print ("".join(['%0d' % digit for digit in bitseq]))
 
 print ("11111111111111111111111111111111111")
+
