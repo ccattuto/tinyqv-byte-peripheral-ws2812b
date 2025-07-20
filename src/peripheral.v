@@ -29,9 +29,11 @@ module tqvp_cattuto_ws2812b_driver (
     localparam REG_CTRL=4'h0, REG_G=4'h1, REG_R=4'h2, REG_B=4'h3;
 
     reg valid;
-    reg latch;
+    reg will_latch, latch;
     reg black;
+    reg ready;
     reg [23:0] color;
+    reg [5:0] counter; 
 
     assign ledstrip_data = black ? 24'h0 : color;
     assign ledstrip_reset = ~rst_n;
@@ -41,7 +43,10 @@ module tqvp_cattuto_ws2812b_driver (
     // write to peripheral
     always @(posedge clk) begin
         if (!rst_n) begin
+            ready <= 1;
+            will_latch <= 0;
             latch <= 0;
+            counter <= 0;
             valid <= 0;
             color <= 0;
             black <= 0;
@@ -49,10 +54,11 @@ module tqvp_cattuto_ws2812b_driver (
             if (data_write) begin
                 case (address)
                     REG_CTRL: begin
-                        if (ledstrip_ready) begin
-                            latch <= data_in[7];
-                            valid <= 1;
+                        if (ready & ledstrip_ready) begin
+                            will_latch <= data_in[7];
+                            counter <= 1 + data_in[6:1];
                             black <= ~data_in[0];
+                            ready <= 0;
                         end
                     end
 
@@ -74,6 +80,15 @@ module tqvp_cattuto_ws2812b_driver (
             end else begin
                 if (!ledstrip_ready) begin
                     valid <= 0;
+                    latch <= 0;
+                end else begin
+                    if (!valid & (counter > 0)) begin
+                        counter <= counter - 1;
+                        valid <= 1;
+                        latch <= ((counter == 1) & will_latch) ? 1 : 0;
+                    end else begin
+                        ready <= 1;
+                    end
                 end
             end
         end
@@ -85,7 +100,7 @@ module tqvp_cattuto_ws2812b_driver (
     assign uo_out[1] = ledstrip;
 
     // read from peripheral
-    assign data_out = (address == REG_CTRL) ? (8'h0 | ledstrip_ready) :
+    assign data_out = (address == REG_CTRL) ? (8'h0 | (ready & ledstrip_ready)) :
                       (address == REG_G) ? ((color >> 16) & 8'hFF) :
                       (address == REG_R) ? ((color >> 8) & 8'hFF) :
                       (address == REG_B) ? (color & 8'hFF) :

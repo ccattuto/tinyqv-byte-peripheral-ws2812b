@@ -60,6 +60,9 @@ async def test_single_pixel(dut):
                       0, 0, 0, 0, 1, 1, 1, 1,  # R: 15
                       1, 0, 0, 0, 0, 0, 0, 0]  # B: 128
 
+    while await tqv.read_reg(0) == 0:
+        await ClockCycles(dut.clk, 1000)
+
     # push (0,0,0) pixel
     dut._log.info("Write PUSH register")
     f = cocotb.start_soon(tqv.write_reg(0, 0x00))
@@ -95,6 +98,46 @@ async def test_single_pixel(dut):
         delay = await wait_peripheral_ready(tqv)
         dut._log.info(f"Peripheral ready after {delay:.2f} us")
         assert (strip_reset and delay > 250) or (not strip_reset and delay < 25)
+
+    # send multiple pixels with final strip reset
+    while await tqv.read_reg(0) == 0:
+        await ClockCycles(dut.clk, 1000)
+
+    await tqv.write_reg(1, 255)
+    await tqv.write_reg(2, 15)
+    await tqv.write_reg(3, 128)
+
+    dut._log.info(f"Sending 11 pixels with final strip reset")
+    f = cocotb.start_soon(tqv.write_reg(0, 0x81 | (10 << 1)))
+    assert led.value == 0
+    for count in range(11):
+        bitseq = await get_GRB(dut, led)
+        dut._log.info(f"Read back {len(bitseq)} bits: {bitseq}")
+        assert bitseq == [1, 1, 1, 1, 1, 1, 1, 1,  # G: 255
+                        0, 0, 0, 0, 1, 1, 1, 1,  # R: 15
+                        1, 0, 0, 0, 0, 0, 0, 0]  # B: 128
+    await f
+
+    delay = await wait_peripheral_ready(tqv)
+    dut._log.info(f"Peripheral ready after {delay:.2f} us")
+    assert delay > 250
+
+    while await tqv.read_reg(0) == 0:
+        await ClockCycles(dut.clk, 1000)
+    
+    # send multiple black pixels with final strip reset
+    dut._log.info(f"Sending 7 black pixels with final strip reset")
+    f = cocotb.start_soon(tqv.write_reg(0, 0x80 | (6 << 1)))
+    assert led.value == 0
+    for count in range(7):
+        bitseq = await get_GRB(dut, led)
+        dut._log.info(f"Read back {len(bitseq)} bits: {bitseq}")
+        assert bitseq == [0] * 24
+    await f
+  
+    delay = await wait_peripheral_ready(tqv)
+    dut._log.info(f"Peripheral ready after {delay:.2f} us")
+    assert delay > 250
 
 
 async def wait_peripheral_ready(tqv):
