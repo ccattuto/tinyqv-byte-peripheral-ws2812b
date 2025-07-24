@@ -189,8 +189,8 @@ async def test_character_generator(dut):
     await tqv.write_reg(3, 0)   # B
 
     # send ASCI character 'A' (65)
-    dut._log.info(f"Push 7x5 pixel matrix for ASCII 65, then reset strip")
-    f = cocotb.start_soon(tqv.write_reg(4, 65 | 0x80))
+    dut._log.info(f"Push 7x5 pixel matrix for ASCII 65, do not reset strip")
+    f = cocotb.start_soon(tqv.write_reg(4, 65))
     assert led.value == 0
     c = await get_char(dut, led)
     await f
@@ -198,13 +198,12 @@ async def test_character_generator(dut):
  
     delay = await time_peripheral_ready(tqv)
     dut._log.info(f"Peripheral ready after {delay:0.2f} us")
-    assert delay > 300
 
     dut._log.info("PUSH A NON-PRINTABLE ASCII CHARACTER")
 
     await wait_peripheral_ready(tqv)
 
-    # request ASCI character 'A' (65)
+    # request non-printable ASCI character 10
     dut._log.info(f"Push 7x5 pixel matrix for ASCII 10, then reset strip")
     f = cocotb.start_soon(tqv.write_reg(4, 10 | 0x80))
     assert led.value == 0

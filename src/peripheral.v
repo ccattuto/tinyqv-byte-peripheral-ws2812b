@@ -53,7 +53,7 @@ module tqvp_cattuto_ws2812b_driver (
             latch <= 0;
             counter <= 0;
             valid <= 0;
-            color <= 0;
+            color <= 24'h002000;
             black <= 0;
             use_rom <= 0;
             char_index <= 0;
@@ -103,9 +103,11 @@ module tqvp_cattuto_ws2812b_driver (
                         counter <= counter - 1;
                     end
                 end else begin
-                    if (!valid && (counter > 0)) begin
-                        valid <= 1;
-                        latch <= ((counter == 1) & will_latch) ? 1 : 0;
+                    if (counter > 0) begin
+                        if (!valid) begin
+                            valid <= 1;
+                            latch <= ((counter == 1) & will_latch) ? 1 : 0;
+                        end
                     end else begin
                         ready <= 1;
                     end
@@ -120,11 +122,11 @@ module tqvp_cattuto_ws2812b_driver (
     assign uo_out[1] = ledstrip;
 
     // read from peripheral
-    assign data_out = (address == REG_CTRL) ? {7'b0, ready & ledstrip_ready} :
-                      (address == REG_G) ? color[23:16] :
-                      (address == REG_R) ? color[15:8] :
-                      (address == REG_B) ? color[7:0] :
-                      8'h0;
+    assign data_out =   (address == REG_CTRL) ? {7'b0, ready}:
+                        (address == REG_G) ? color[23:16] :
+                        (address == REG_R) ? color[15:8] :
+                        (address == REG_B) ? color[7:0] :
+                        8'b0;
 
     // -------------- WS2812B LED STRIP ---------------------------
 
