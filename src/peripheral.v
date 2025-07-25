@@ -31,15 +31,15 @@ module tqvp_cattuto_ws2812b_driver (
 
     reg valid;
     reg will_latch;
-    reg black;
+    reg set_clear;
     reg use_rom;
     reg ready;
-    reg [23:0] color;
+    reg [23:0] color = 24'h002000;
     reg [5:0] counter; 
 
     wire pixel_val;
     assign pixel_val = char_data[counter - 1];
-    assign ledstrip_data = ((~use_rom & ~black) | (use_rom & pixel_val)) ? color : 24'h0;
+    assign ledstrip_data = ((~use_rom & set_clear) | (use_rom & pixel_val)) ? color : 24'h0;
 
     wire latch;
     assign latch = (counter == 1) ? will_latch : 0;
@@ -56,7 +56,7 @@ module tqvp_cattuto_ws2812b_driver (
             counter <= 0;
             valid <= 0;
             color <= 0;
-            black <= 0;
+            set_clear <= 0;
             use_rom <= 0;
             char_index <= 0;
         end else begin
@@ -64,8 +64,8 @@ module tqvp_cattuto_ws2812b_driver (
                 case (address)
                     REG_CTRL: begin
                         will_latch <= data_in[7];
-                        counter <= data_in[6:1];
-                        black <= ~data_in[0];
+                        set_clear <= data_in[6];
+                        counter <= data_in[5:0];
                         use_rom <= 0;
                         ready <= 0;
                     end
