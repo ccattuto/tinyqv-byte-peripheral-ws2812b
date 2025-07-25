@@ -113,10 +113,7 @@ module tqvp_cattuto_ws2812b_driver (
     assign uo_out[1] = ledstrip;
 
     // read from peripheral
-    assign data_out =   (address == REG_G) ? color[23:16] :
-                        (address == REG_R) ? color[15:8] :
-                        (address == REG_B) ? color[7:0] :
-                        {7'b0, ready};
+    assign data_out =   (address == REG_CTRL) ? {7'b0, ready} : 8'b0;
     
     // -------------- WS2812B LED STRIP ---------------------------
 
