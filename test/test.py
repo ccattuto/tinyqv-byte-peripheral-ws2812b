@@ -44,7 +44,7 @@ async def test_single_pixel(dut):
 
     # push 1 pixel with the color set above
     dut._log.info("Writing 0x01 to PUSH register")
-    f = cocotb.start_soon(tqv.write_reg(0, 0x01))  # we need to use a coroutine
+    f = cocotb.start_soon(tqv.write_reg(0, 0x03))  # we need to use a coroutine
     assert led.value == 0
     # parse the the LED strip signal
     bitseq = await get_GRB(dut, led)
@@ -64,7 +64,7 @@ async def test_single_pixel(dut):
 
     # push (0,0,0) pixel
     dut._log.info("Writing 0x00 to PUSH register")
-    f = cocotb.start_soon(tqv.write_reg(0, 0x00))
+    f = cocotb.start_soon(tqv.write_reg(0, 0x02))
     assert led.value == 0
     bitseq = await get_GRB(dut, led)
     await f
