@@ -34,7 +34,7 @@ module tqvp_cattuto_ws2812b_driver (
     reg set_clear;
     reg use_rom;
     reg ready;
-    reg [23:0] color = 24'h002000;
+    reg [23:0] color;
     reg [5:0] counter; 
 
     wire pixel_val;
@@ -121,7 +121,7 @@ module tqvp_cattuto_ws2812b_driver (
     // -------------- WS2812B LED STRIP ---------------------------
 
     wire [23:0] ledstrip_data;
-    reg ledstrip_valid;
+    wire ledstrip_valid;
     wire ledstrip_reset;
     wire ledstrip_latch;
     wire ledstrip_ready;
