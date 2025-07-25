@@ -61,14 +61,14 @@ module tqvp_cattuto_ws2812b_driver (
             char_index <= 0;
         end else begin
             if (ready & data_write) begin
+                will_latch <= data_in[7];
                 case (address)
                     REG_CTRL: begin
-                        will_latch <= data_in[7];
                         counter <= 1 + data_in[6:1];
                         black <= ~data_in[0];
                         use_rom <= 0;
                         ready <= 0;
-                end
+                    end
 
                     REG_G: begin
                         color[23:16] <= data_in;
@@ -83,7 +83,6 @@ module tqvp_cattuto_ws2812b_driver (
                     end
 
                     REG_CHAR: begin
-                        will_latch <= data_in[7];
                         counter <= CHAR_LEDS;
                         char_index <= data_in[6:0];
                         use_rom <= 1;
