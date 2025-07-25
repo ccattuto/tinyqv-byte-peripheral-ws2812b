@@ -100,13 +100,8 @@ module tqvp_cattuto_ws2812b_driver (
                         counter <= counter - 1;
                     end
                 end else begin
-                    if (counter > 0) begin
-                        if (!valid) begin
-                            valid <= 1;
-                        end
-                    end else begin
-                        ready <= 1;
-                    end
+                    valid <= (counter > 0);
+                    ready <= (counter == 0);
                 end
             end
         end
