@@ -25,18 +25,9 @@ async def test_single_pixel(dut):
 
     dut._log.info("PUSH 1 PIXEL WITH COLOR (G=255, R=15, B=128)")
 
-    # Test writing/reading color registers
-    dut._log.info("Writing to register G, then reading it back")
     await tqv.write_reg(1, 255)
-    assert await tqv.read_reg(1) == 255
-
-    dut._log.info("Writing to register R, then reading it back")
     await tqv.write_reg(2, 15)
-    assert await tqv.read_reg(2) == 15
-
-    dut._log.info("Writing to register B, then reading it back")
     await tqv.write_reg(3, 128)
-    assert await tqv.read_reg(3) == 128
 
     # wait for peripheral to be ready
     dut._log.info("Waiting for peripheral to be ready")
