@@ -23,10 +23,10 @@ async def test_single_pixel(dut):
     tqv = TinyQV(dut)
     await tqv.reset()
 
-    dut._log.info("PUSH 1 PIXEL WITH COLOR (G=255, R=15, B=128)")
+    dut._log.info("PUSH 1 PIXEL WITH COLOR (R=15, G=255, B=128)")
 
-    await tqv.write_reg(1, 255)
-    await tqv.write_reg(2, 15)
+    await tqv.write_reg(1, 15)
+    await tqv.write_reg(2, 255)
     await tqv.write_reg(3, 128)
 
     # wait for peripheral to be ready
@@ -93,8 +93,8 @@ async def test_multiple_pixels(dut):
         strip_reset = int(random.random() > PROB_RESET)
 
         dut._log.info(f"Loading color {color}, reset={strip_reset}")
-        await tqv.write_reg(1, color[0])  # G
-        await tqv.write_reg(2, color[1])  # R
+        await tqv.write_reg(1, color[0])  # R
+        await tqv.write_reg(2, color[1])  # G
         await tqv.write_reg(3, color[2])  # B
 
         dut._log.info(f"Sending pixel #{count}")
@@ -105,7 +105,7 @@ async def test_multiple_pixels(dut):
 
         # Check that the read back color matches the one we set
         dut._log.info(f"Read back {len(bitseq)} bits: {bitseq}")
-        assert bitseq == list(map(int, f'{color[0]:08b}')) + list(map(int, f'{color[1]:08b}')) + list(map(int, f'{color[2]:08b}'))
+        assert bitseq == list(map(int, f'{color[1]:08b}')) + list(map(int, f'{color[0]:08b}')) + list(map(int, f'{color[2]:08b}'))
 
         # Check that the strip reset flag results in the expected delay
         # (conservatively, over 300 us for strip reset and under 10 us for no reset)
@@ -118,8 +118,8 @@ async def test_multiple_pixels(dut):
 
     await wait_peripheral_ready(tqv)
 
-    await tqv.write_reg(1, 255)  # G
-    await tqv.write_reg(2, 15)   # R
+    await tqv.write_reg(1, 15)   # R
+    await tqv.write_reg(2, 255)  # G
     await tqv.write_reg(3, 128)  # B
 
     dut._log.info(f"Sending {NUM_PIXELS} pixels with strip reset")
@@ -175,8 +175,8 @@ async def test_character_generator(dut):
 
     await wait_peripheral_ready(tqv)
 
-    await tqv.write_reg(1, 0)   # G
-    await tqv.write_reg(2, 255) # R
+    await tqv.write_reg(1, 255) # R
+    await tqv.write_reg(2, 0)   # G
     await tqv.write_reg(3, 0)   # B
 
     # send ASCI character 'A' (65)
@@ -200,7 +200,7 @@ async def test_character_generator(dut):
     assert led.value == 0
     c = await get_char(dut, led)
     await f
-    assert c.bitmap == "11111111111111111111111111111111111"  # filled matrxi for non-printable characters
+    assert c.bitmap == "11111111111111111111111111111111111"  # filled matrix for non-printable characters
  
     delay = await time_peripheral_ready(tqv)
     dut._log.info(f"Peripheral ready after {delay:0.2f} us")
