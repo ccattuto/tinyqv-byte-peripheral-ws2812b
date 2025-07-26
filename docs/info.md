@@ -39,3 +39,7 @@ If you have a [Pixie Chroma](https://connornishijima.github.io/Pixie_Chroma/), c
 ## External hardware
 
 WS2812B LED strip or Pixie Chroma matrix with DATA_IN connected to `uo_out[1]`.
+
+## FPGA-tested
+
+![FPGA test](fpga_test.jpg)
