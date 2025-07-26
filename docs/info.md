@@ -11,7 +11,7 @@ You can also include images in this folder and reference them in the markdown. E
 
 Minimal WS2812B LED strip driver for TinyQV, meant for displaying debugging information.
 
-The output signal to the LED strip is `uo_out[1]`. To push pixels to the strip, load the color into registers R/G/B and then write to register CTRL. At boot, the default color is red (0x20, 0, 0). It is possible to push multiple pixels of the same color, and to clear pixels, i.e., push black pixels (0,0,0) without having to change the color registers. It is possible to control whether a LED strip reset (`uo_out[1]` held low for over 300us) is sent after the pixel(s) are sent to the strip.
+The output signal to the LED strip is `uo_out[1]`. To push pixels to the strip, load the color into registers G/R/B and then write to register CTRL. At boot, the default color is red (0, 0x20, 0). It is possible to push multiple pixels of the same color, and to clear pixels, i.e., push black pixels (0,0,0) without having to change the color registers. It is possible to control whether a LED strip reset (`uo_out[1]` held low for over 300us) is sent after the pixel(s) are sent to the strip.
 
 The driver is based on a WS2812B Verilog module that has been tested in FPGA and in silicon (see [this TinyTapeout project](https://github.com/ccattuto/tt07-serial-charmatrix/)).
 
@@ -23,10 +23,10 @@ The state of the driver can be checked by reading register CTRL (0x00). If bit 0
 
 | Address | Name  | Access | Description                                                         |
 |---------|-------|--------|---------------------------------------------------------------------|
-| 0x00    | CTRL  | W      | Push pixel(s) to strip. Bits [5:0] contain the number of pixels to send. If bit 6 = 0, the loaded color (registers R/G/B) is used. If bit 6 = 1, color (0,0,0) is used (i.e., pixels are cleared). Setting bit 7 = 1 resets the strip after pushing the pixel(s). Write is ignored if the peripheral is not ready. |
+| 0x00    | CTRL  | W      | Push pixel(s) to strip. Bits [5:0] contain the number of pixels to send. If bit 6 = 0, the loaded color (registers G/R/B) is used. If bit 6 = 1, color (0,0,0) is used (i.e., pixels are cleared). Setting bit 7 = 1 resets the strip after pushing the pixel(s). Write is ignored if the peripheral is not ready. |
 |         |       | R      | Status: bit 0 = peripheral ready                                    |
-| 0x01    | R     | W      | Red color component                                               |
-| 0x02    | G     | W      | Green color component                                                 |
+| 0x01    | G     | W      | Green color component                                               |
+| 0x02    | R     | W      | Red color component                                                 |
 | 0x03    | B     | W      | Blue color component                                                |
 | 0x04    | CHAR  | W      | Push a printable ASCII character to the strip, using the loaded color (registers G/R/B). It assumes that the strip is a chain of 5x7 LED matrices. Bits 6:0 contain the ASCII code of the character. Non-printable ASCII characters (ASCII code <32 or >126) are displayed as filled blocks. Bit 7 = 1 resets the strip after pushing the character's pixels. Write is ignored if the peripheral is not ready. |
 

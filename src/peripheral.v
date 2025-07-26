@@ -26,7 +26,7 @@ module tqvp_cattuto_ws2812b_driver (
     output [7:0]  data_out      // Data out from the peripheral, set this in accordance with the supplied address
 );
 
-    localparam REG_CTRL=4'h0, REG_R=4'h1, REG_G=4'h2, REG_B=4'h3, REG_CHAR=4'h4;
+    localparam REG_CTRL=4'h0, REG_G=4'h1, REG_R=4'h2, REG_B=4'h3, REG_CHAR=4'h4;
     localparam CHAR_LEDS = 5 * 7; // 5x7 char matrix
 
     reg valid;
@@ -69,13 +69,13 @@ module tqvp_cattuto_ws2812b_driver (
                         use_rom <= 0;
                         ready <= 0;
                     end
-                    
-                    REG_R: begin
-                        color[15:8] <= data_in;
-                    end
 
                     REG_G: begin
                         color[23:16] <= data_in;
+                    end
+                    
+                    REG_R: begin
+                        color[15:8] <= data_in;
                     end
 
                     REG_B: begin
