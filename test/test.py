@@ -35,7 +35,7 @@ async def test_single_pixel(dut):
 
     # push 1 pixel with the color set above
     dut._log.info("Writing PUSH register")
-    f = cocotb.start_soon(tqv.write_reg(0, 0x40 | 0x01))  # we need to use a coroutine
+    f = cocotb.start_soon(tqv.write_reg(0, 0x01))  # we need to use a coroutine
     assert led.value == 0
     # parse the the LED strip signal
     bitseq = await get_GRB(dut, led)
@@ -55,7 +55,7 @@ async def test_single_pixel(dut):
 
     # push (0,0,0) pixel
     dut._log.info("Writing PUSH register")
-    f = cocotb.start_soon(tqv.write_reg(0, 0x01))
+    f = cocotb.start_soon(tqv.write_reg(0, 0x40 | 0x01))
     assert led.value == 0
     bitseq = await get_GRB(dut, led)
     await f
@@ -98,7 +98,7 @@ async def test_multiple_pixels(dut):
         await tqv.write_reg(3, color[2])  # B
 
         dut._log.info(f"Sending pixel #{count}")
-        f = cocotb.start_soon(tqv.write_reg(0, 0x40 | 0x01 | (strip_reset << 7)))
+        f = cocotb.start_soon(tqv.write_reg(0, 0x01 | (strip_reset << 7)))
         assert led.value == 0
         bitseq = await get_GRB(dut, led)
         await f
@@ -123,7 +123,7 @@ async def test_multiple_pixels(dut):
     await tqv.write_reg(3, 128)  # B
 
     dut._log.info(f"Sending {NUM_PIXELS} pixels with strip reset")
-    f = cocotb.start_soon(tqv.write_reg(0, 0x80 | 0x40 | NUM_PIXELS))
+    f = cocotb.start_soon(tqv.write_reg(0, 0x80 | NUM_PIXELS))
     assert led.value == 0
     for count in range(NUM_PIXELS):
         bitseq = await get_GRB(dut, led)
@@ -144,7 +144,7 @@ async def test_multiple_pixels(dut):
    
     # send multiple black pixels with final strip reset
     dut._log.info(f"Sending {NUM_BLACK_PIXELS} black pixels with final strip reset")
-    f = cocotb.start_soon(tqv.write_reg(0, 0x80 | NUM_BLACK_PIXELS))
+    f = cocotb.start_soon(tqv.write_reg(0, 0x80 | 0x40 | NUM_BLACK_PIXELS))
     assert led.value == 0
     for count in range(NUM_BLACK_PIXELS):
         bitseq = await get_GRB(dut, led)
