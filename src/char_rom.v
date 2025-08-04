@@ -8,12 +8,16 @@ module char_rom #(
     output wire [DATA_WIDTH-1:0] data
 );
 
+wire [DATA_WIDTH-1:0] d;
+
+assign data = { d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8], d[9], d[10], d[11], d[12], d[13], d[14], d[15], d[16], d[17], d[18], d[19], d[20], d[21], d[22], d[23], d[24], d[25], d[26], d[27], d[28], d[29], d[30], d[31], d[32], d[33], d[34] };
+
 reg [DATA_WIDTH-1:0] mem [0:ADDR_MAX-ADDR_MIN];
 
 initial begin
     $readmemb("font.bin", mem);  // load char bitmaps from file
 end
 
-assign data = |address[ADDR_WIDTH-1:5] ? mem[address-ADDR_MIN] : '1;
+assign d = |address[ADDR_WIDTH-1:5] ? mem[address-ADDR_MIN] : '1;
 
 endmodule
