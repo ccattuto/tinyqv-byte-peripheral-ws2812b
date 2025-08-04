@@ -55,7 +55,7 @@ module tqvp_cattuto_ws2812b_driver (
             will_latch <= 0;
             counter <= 0;
             valid <= 0;
-            color <= 24'h200000;
+            color <= 24'h002000;
             clear <= 0;
             use_rom <= 0;
             char_index <= 0;

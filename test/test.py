@@ -11,7 +11,41 @@ from tqv import TinyQV
 
 # Test sending single pixels
 @cocotb.test()
-async def test_single_pixel(dut):
+async def test_single_pixel1(dut):
+    dut._log.info("Start")
+
+    # Set the clock period to 15 ns (~66.7 MHz)
+    clock = Clock(dut.clk, 15, units="ns")
+    cocotb.start_soon(clock.start())
+   
+    led = dut.uo_out[1]
+
+    tqv = TinyQV(dut)
+    await tqv.reset()
+
+    dut._log.info("PUSH 1 PIXEL WITH DEFAULT COLOR (R=32, G=0, B=0)")
+
+    # wait for peripheral to be ready
+    dut._log.info("Waiting for peripheral to be ready")
+    await wait_peripheral_ready(tqv)
+
+    # push 1 pixel with the color set above
+    dut._log.info("Writing PUSH register")
+    f = cocotb.start_soon(tqv.write_reg(0, 0x01))  # we need to use a coroutine
+    assert led.value == 0
+    # parse the the LED strip signal
+    bitseq = await get_GRB(dut, led)
+    await f  # wait for the coroutine to finish
+
+    dut._log.info(f"Read back {len(bitseq)} bits: {bitseq}")
+    assert bitseq == [  0, 0, 0, 0, 0, 0, 0, 0,   # G: 0
+                        0, 0, 1, 0, 0, 0, 0, 0,   # R: 32
+                        0, 0, 0, 0, 0, 0, 0, 0 ]  # B: 0
+
+
+# Test sending single pixels
+@cocotb.test()
+async def test_single_pixel2(dut):
     dut._log.info("Start")
 
     # Set the clock period to 15 ns (~66.7 MHz)
