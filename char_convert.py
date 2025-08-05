@@ -273,9 +273,6 @@ def hex_to_binary_row_major(hex_values):
 				seq.append(0)
 	return seq
 
-for i in range(32):
-	print ("11111111111111111111111111111111111")
-
 for i in range(32, 127):
     bitseq = hex_to_binary_row_major(char_list[i*5 : (i+1)*5])
     print ("".join(['%0d' % digit for digit in bitseq]))
