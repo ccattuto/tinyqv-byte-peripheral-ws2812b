@@ -1,4 +1,4 @@
-module ws2812b (
+module ws2812b #(parameter CLOCK_MHZ=64) (
     input wire clk,               // 64 MHz input clock
     input wire rst_n,
     input wire [23:0] data_in,    // color data
@@ -8,7 +8,7 @@ module ws2812b (
     output reg led                // output signal to LED strip
 );
 
-  localparam CLOCK_HZ = 64_000_000;
+  localparam CLOCK_HZ = CLOCK_MHZ * 1_000_000;
   localparam NS_PER_S = 1_000_000_000;
 
   function [15:0] cycles_from_ns;
