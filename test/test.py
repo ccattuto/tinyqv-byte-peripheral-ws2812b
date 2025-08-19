@@ -33,7 +33,7 @@ async def test_single_pixel1(dut):
     dut._log.info("Writing PUSH register")
     f = cocotb.start_soon(tqv.write_reg(0, 0x01))  # we need to use a coroutine
     assert led.value == 0
-    # parse the the LED strip signal
+    # parse the LED strip signal
     bitseq = await get_GRB(dut, led)
     await f  # wait for the coroutine to finish
 
@@ -213,7 +213,7 @@ async def test_character_generator(dut):
     await tqv.write_reg(2, 0)   # G
     await tqv.write_reg(3, 0)   # B
 
-    # send ASCI character 'A' (65)
+    # send ASCII character 'A' (65)
     dut._log.info(f"Push 7x5 pixel matrix for ASCII 65, do not reset strip")
     f = cocotb.start_soon(tqv.write_reg(4, 65))
     assert led.value == 0
@@ -234,7 +234,7 @@ async def test_character_generator(dut):
     assert led.value == 0
     c = await get_char(dut, led)
     await f
-    assert c.bitmap == "11111111111111111111111111111111111"  # filled matrxi for non-printable characters
+    assert c.bitmap == "11111111111111111111111111111111111"  # filled matrix for non-printable characters
  
     delay = await time_peripheral_ready(tqv)
     dut._log.info(f"Peripheral ready after {delay:0.2f} us")
@@ -252,7 +252,7 @@ async def time_peripheral_ready(tqv):
     t2 = get_sim_time('ns')
     return (t2 - t1) / 1000.0
 
-# read 24 color bits (G / R / B) parsing WA2812B signal
+# read 24 color bits (G / R / B) parsing WS2812B signal
 async def get_GRB(dut, led):
     bitseq = []
 
@@ -275,7 +275,7 @@ async def get_GRB(dut, led):
 
     return bitseq
 
-# class to hold character's bitmap & color
+# class to hold character bitmap & color
 class Char():
     def __init__(self, bitmap, color):
         self.bitmap = bitmap
