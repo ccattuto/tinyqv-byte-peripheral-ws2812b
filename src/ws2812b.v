@@ -85,11 +85,12 @@ module ws2812b #(parameter CLOCK_MHZ=64) (
           if (time_counter < CYCLES_PERIOD - 1) begin
             // Continue sending current bit
             time_counter <= time_counter + 1;
-            if (time_counter == (data[bitpos] ? (CYCLES_T1H - 1) : (CYCLES_T0H - 1))) begin
+            if (time_counter == (data[23] ? (CYCLES_T1H - 1) : (CYCLES_T0H - 1))) begin
                 led <= 0;
             end
-          end else if (bitpos > 0) begin
+          end else if (|bitpos) begin
             // Move to next bit
+            data <= data << 1;
             bitpos <= bitpos - 1;
             time_counter <= 16'd0;
             led <= 1;
