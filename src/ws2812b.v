@@ -19,8 +19,7 @@ module ws2812b #(parameter CLOCK_MHZ=64) (
   localparam PERIOD_NS = 1250;        // total period of one bit (1250 ns)
   localparam RES_DELAY_NS = 325_000;  // reset duration (325 us)
 
-  `define CYCLES_FROM_NS(_NSVAL) \
-  ( ((CLOCK_HZ * (64'd0 + _NSVAL)) + (NS_PER_S /2)) / NS_PER_S )
+  `define CYCLES_FROM_NS(_NSVAL)      ( (CLOCK_HZ * (64'd0 + _NSVAL)) / NS_PER_S )
 
   // Calculate clock cycles for each timing parameter
   localparam [63:0] CYCLES_PERIOD_U = `CYCLES_FROM_NS(PERIOD_NS);
@@ -38,7 +37,7 @@ module ws2812b #(parameter CLOCK_MHZ=64) (
   localparam [15:0] CYCLES_RESET  =   CYCLES_RESET_U[15:0];
 
   // state machine
-  parameter IDLE = 2'd0, START = 2'd1, SEND_BIT = 2'd2, RESET = 2'd3;
+  parameter IDLE = 2'd0, SEND_BIT = 2'd1, RESET = 2'd2;
   reg [1:0] state;
 
   reg [4:0] bitpos;
@@ -61,24 +60,15 @@ module ws2812b #(parameter CLOCK_MHZ=64) (
         IDLE: begin
           bitpos <= 5'd0;
           time_counter <= 16'd0;
-          led <= 0;
           if (ready && valid) begin
             data <= data_in;
             will_latch <= latch;
             ready <= 0;
-            state <= START;
+            led <= 1;
+            state <= SEND_BIT;
           end else begin
             ready <= 1;
           end
-        end
-
-        START: begin
-          // Initialize for sending data
-          state <= SEND_BIT;
-          bitpos <= 5'd23;
-          time_counter <= 16'd0;
-          led <= 1;
-          ready <= 0;
         end
 
         SEND_BIT: begin
@@ -88,10 +78,10 @@ module ws2812b #(parameter CLOCK_MHZ=64) (
             if (time_counter == (data[23] ? (CYCLES_T1H - 1) : (CYCLES_T0H - 1))) begin
                 led <= 0;
             end
-          end else if (|bitpos) begin
+          end else if (bitpos < 5'd23) begin
             // Move to next bit
             data <= data << 1;
-            bitpos <= bitpos - 1;
+            bitpos <= bitpos + 1;
             time_counter <= 16'd0;
             led <= 1;
           end else begin
@@ -111,6 +101,16 @@ module ws2812b #(parameter CLOCK_MHZ=64) (
             // Reset complete, return to idle
             state <= IDLE;
           end
+        end
+
+        default: begin
+          state <= RESET;
+          bitpos <= 5'd0;
+          time_counter <= 16'd0;
+          led <= 0;
+          ready <= 0;
+          data <= 24'd0;
+          will_latch <= 0;
         end
       endcase
     end
