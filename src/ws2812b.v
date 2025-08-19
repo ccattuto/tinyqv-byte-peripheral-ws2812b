@@ -109,7 +109,6 @@ module ws2812b #(parameter CLOCK_MHZ=64) (
           end else begin
             // Reset complete, return to idle
             state <= IDLE;
-            time_counter <= 16'd0;
           end
         end
       endcase
