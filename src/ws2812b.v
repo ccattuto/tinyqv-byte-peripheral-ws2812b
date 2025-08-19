@@ -11,32 +11,31 @@ module ws2812b #(parameter CLOCK_MHZ=64) (
   localparam CLOCK_HZ = CLOCK_MHZ * 1_000_000;
   localparam NS_PER_S = 1_000_000_000;
 
-  function [15:0] cycles_from_ns;
-  input [31:0] ns;     // argument in ns
-  reg   [63:0] num;    // wide intermediate
-  reg   [63:0] q64;
-  begin
-    num = (64'd64_000_000 * ns) + 64'd500_000_000;
-    q64 = num / 64'd1_000_000_000;
-    cycles_from_ns = q64[15:0];
-  end
-  endfunction
-
   // Define timing parameters according to WS2812B datasheet
-  localparam T0H = 400;             // width of '0' high pulse (400 ns)
-  localparam T1H = 800;             // width of '1' high pulse (800 ns)
-  localparam T0L = 850;             // width of '0' low pulse (850 ns)
-  localparam T1L = 450;             // width of '1' low pulse (450 ns)
-  localparam PERIOD = 1250;         // total period of one bit (1250 ns)
-  localparam RES_DELAY = 325_000;   // reset duration (325 us)
+  localparam T0H_NS = 400;            // width of '0' high pulse (400 ns)
+  localparam T1H_NS = 800;            // width of '1' high pulse (800 ns)
+  localparam T0L_NS = 850;            // width of '0' low pulse (850 ns)
+  localparam T1L_NS = 450;            // width of '1' low pulse (450 ns)
+  localparam PERIOD_NS = 1250;        // total period of one bit (1250 ns)
+  localparam RES_DELAY_NS = 325_000;  // reset duration (325 us)
+
+  `define CYCLES_FROM_NS(NSVAL) \
+  ( ((CLOCK_HZ * (NSVAL)) + NS_PER_S/2) / NS_PER_S )
 
   // Calculate clock cycles for each timing parameter
-  localparam [15:0] CYCLES_PERIOD = cycles_from_ns(PERIOD);
-  localparam [15:0] CYCLES_T0H = cycles_from_ns(T0H);
-  localparam [15:0] CYCLES_T1H = cycles_from_ns(T1H);
-  localparam [15:0] CYCLES_T0L = cycles_from_ns(PERIOD - T0H);
-  localparam [15:0] CYCLES_T1L = cycles_from_ns(PERIOD - T1H);
-  localparam [15:0] CYCLES_RESET = cycles_from_ns(RES_DELAY);
+  localparam CYCLES_PERIOD_U = `CYCLES_FROM_NS(PERIOD_NS);
+  localparam CYCLES_T0H_U = `CYCLES_FROM_NS(T0H_NS);
+  localparam CYCLES_T1H_U = `CYCLES_FROM_NS(T1H_NS);
+  localparam CYCLES_T0L_U = `CYCLES_FROM_NS(PERIOD_NS - T0H_NS);
+  localparam CYCLES_T1L_U = `CYCLES_FROM_NS(PERIOD_NS - T1H_NS);
+  localparam CYCLES_RESET_U = `CYCLES_FROM_NS(RES_DELAY_NS);
+
+  localparam [15:0] CYCLES_PERIOD = CYCLES_PERIOD_U[15:0];
+  localparam [15:0] CYCLES_T0H    = CYCLES_T0H_U[15:0];
+  localparam [15:0] CYCLES_T1H    = CYCLES_T1H_U[15:0];
+  localparam [15:0] CYCLES_T0L    = CYCLES_T0L_U[15:0];
+  localparam [15:0] CYCLES_T1L    = CYCLES_T1L_U[15:0];
+  localparam [15:0] CYCLES_RESET  = CYCLES_RESET_U[15:0];
 
   // state machine
   parameter IDLE = 0, START = 1, SEND_BIT = 2, RESET = 3;
