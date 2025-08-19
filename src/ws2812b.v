@@ -39,7 +39,7 @@ module ws2812b #(parameter CLOCK_MHZ=64) (
   localparam [15:0] CYCLES_RESET = cycles_from_ns(RES_DELAY);
 
   // state machine
-  parameter IDLE = 2'd0, START = 2'd1, SEND_BIT = 2'd2, RESET = 2'd3;
+  parameter IDLE = 0, START = 1, SEND_BIT = 2, RESET = 3;
   reg [1:0] state;
 
   reg [4:0] bitpos;
@@ -113,6 +113,15 @@ module ws2812b #(parameter CLOCK_MHZ=64) (
           end
         end
 
+        default: begin
+          state <= RESET;
+          bitpos <= 0;
+          time_counter <= 0;
+          led <= 0;
+          ready <= 0;
+          data <= 24'b0;
+          will_latch <= 0;
+        end
       endcase
     end
   end
