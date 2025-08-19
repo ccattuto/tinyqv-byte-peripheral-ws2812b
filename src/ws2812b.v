@@ -25,15 +25,15 @@ module ws2812b #(parameter CLOCK_MHZ=64) (
   localparam [63:0] CYCLES_PERIOD_U = `CYCLES_FROM_NS(PERIOD_NS);
   localparam [63:0] CYCLES_T0H_U =    `CYCLES_FROM_NS(T0H_NS);
   localparam [63:0] CYCLES_T1H_U =    `CYCLES_FROM_NS(T1H_NS);
-  localparam [63:0] CYCLES_T0L_U =    `CYCLES_FROM_NS(PERIOD_NS - T0H_NS);
-  localparam [63:0] CYCLES_T1L_U =    `CYCLES_FROM_NS(PERIOD_NS - T1H_NS);
+  //localparam [63:0] CYCLES_T0L_U =    `CYCLES_FROM_NS(PERIOD_NS - T0H_NS);
+  //localparam [63:0] CYCLES_T1L_U =    `CYCLES_FROM_NS(PERIOD_NS - T1H_NS);
   localparam [63:0] CYCLES_RESET_U =  `CYCLES_FROM_NS(RES_DELAY_NS);
 
   localparam [15:0] CYCLES_PERIOD =   CYCLES_PERIOD_U[15:0];
   localparam [15:0] CYCLES_T0H    =   CYCLES_T0H_U[15:0];
   localparam [15:0] CYCLES_T1H    =   CYCLES_T1H_U[15:0];
-  localparam [15:0] CYCLES_T0L    =   CYCLES_T0L_U[15:0];
-  localparam [15:0] CYCLES_T1L    =   CYCLES_T1L_U[15:0];
+  //localparam [15:0] CYCLES_T0L    =   CYCLES_T0L_U[15:0];
+  //localparam [15:0] CYCLES_T1L    =   CYCLES_T1L_U[15:0];
   localparam [15:0] CYCLES_RESET  =   CYCLES_RESET_U[15:0];
 
   // state machine
@@ -68,6 +68,7 @@ module ws2812b #(parameter CLOCK_MHZ=64) (
             state <= SEND_BIT;
           end else begin
             ready <= 1;
+            led <= 0;
           end
         end
 
@@ -87,9 +88,7 @@ module ws2812b #(parameter CLOCK_MHZ=64) (
           end else begin
             // All bits sent
             state <= will_latch ? RESET : IDLE;
-            will_latch <= 0;
             time_counter <= 16'd0;
-            led <= 0;
           end
         end
 
