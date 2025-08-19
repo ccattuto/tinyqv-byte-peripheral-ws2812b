@@ -14,8 +14,8 @@ module ws2812b #(parameter CLOCK_MHZ=64) (
   // Define timing parameters according to WS2812B datasheet
   localparam T0H_NS = 400;            // width of '0' high pulse (400 ns)
   localparam T1H_NS = 800;            // width of '1' high pulse (800 ns)
-  localparam T0L_NS = 850;            // width of '0' low pulse (850 ns)
-  localparam T1L_NS = 450;            // width of '1' low pulse (450 ns)
+  //localparam T0L_NS = 850;            // width of '0' low pulse (850 ns)
+  //localparam T1L_NS = 450;            // width of '1' low pulse (450 ns)
   localparam PERIOD_NS = 1250;        // total period of one bit (1250 ns)
   localparam RES_DELAY_NS = 325_000;  // reset duration (325 us)
 
