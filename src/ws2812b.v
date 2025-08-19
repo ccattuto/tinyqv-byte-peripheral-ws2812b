@@ -112,16 +112,6 @@ module ws2812b #(parameter CLOCK_MHZ=64) (
             time_counter <= 16'd0;
           end
         end
-
-        default: begin
-          state <= RESET;
-          bitpos <= 5'd0;
-          time_counter <= 16'd0;
-          led <= 0;
-          ready <= 0;
-          data <= 24'd0;
-          will_latch <= 0;
-        end
       endcase
     end
   end
